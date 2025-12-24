@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TLB Hit / Miss Visualizer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h1 class="title">TLB Hit / Miss Visualizer</h1>
+<p class="subtitle">Animated OS Memory Management Simulation</p>
+
+<div class="input-panel">
+    <input type="number" id="logical" placeholder="Enter Logical Address">
+    <button onclick="simulate()">Simulate</button>
+</div>
+
+<div class="pipeline">
+    <div class="glass">
+        <h3>CPU</h3>
+        <div id="cpu"></div>
+    </div>
+
+    <div class="glass">
+        <h3>TLB</h3>
+        <div id="tlb"></div>
+    </div>
+
+    <div class="glass">
+        <h3>Page Table</h3>
+        <div id="pt"></div>
+    </div>
+
+    <div class="glass">
+        <h3>Main Memory</h3>
+        <div id="mem"></div>
+    </div>
+</div>
+
+<div id="status"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
