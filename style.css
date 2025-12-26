@@ -8,7 +8,12 @@ body {
     color: white;
     text-align: center;
     min-height: 100vh;
+    margin: 0;
 }
+
+/* =======================
+   Headings
+======================= */
 
 .title {
     margin-top: 20px;
@@ -17,17 +22,23 @@ body {
 
 .subtitle {
     color: #94a3b8;
+    margin-bottom: 20px;
 }
 
+/* =======================
+   Input Section
+======================= */
+
 .input-panel {
-    margin: 25px;
+    margin-bottom: 30px;
 }
 
 input {
     padding: 12px;
-    width: 230px;
+    width: 240px;
     border-radius: 10px;
     border: none;
+    outline: none;
 }
 
 button {
@@ -35,46 +46,83 @@ button {
     margin-left: 10px;
     border-radius: 10px;
     border: none;
-    background: linear-gradient(135deg,#6366f1,#a855f7);
+    background: linear-gradient(135deg, #6366f1, #a855f7);
     color: white;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s ease;
 }
 
 button:hover {
     transform: scale(1.05);
 }
 
+/* =======================
+   Pipeline Layout
+======================= */
+
 .pipeline {
     display: flex;
     justify-content: center;
     gap: 25px;
     flex-wrap: wrap;
+    padding-bottom: 40px;
 }
 
+/* =======================
+   Glass Cards
+======================= */
+
 .glass {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(12px);
     border-radius: 16px;
     padding: 15px;
     width: 220px;
-    min-height: 260px;
-    box-shadow: 0 0 25px rgba(0,0,0,0.6);
+    min-height: 280px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.6);
 }
 
 .glass h3 {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     color: #e0e7ff;
 }
 
+/* Page Table wider for 2 columns */
+.glass:nth-child(3) {
+    width: 260px;
+}
+
+/* =======================
+   Blocks
+======================= */
+
 .block {
-    background: rgba(255,255,255,0.15);
-    margin: 8px 0;
+    background: rgba(255, 255, 255, 0.15);
+    margin: 6px 0;
     padding: 10px;
     border-radius: 10px;
-    animation: fadeIn 0.5s ease;
+    animation: fadeIn 0.4s ease;
 }
+
+/* =======================
+   Page Table Grid (2 Columns)
+======================= */
+
+#pt {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+#pt .block {
+    font-size: 14px;
+    padding: 8px;
+}
+
+/* =======================
+   Animations
+======================= */
 
 .search {
     animation: pulse 0.8s infinite;
@@ -86,19 +134,31 @@ button:hover {
     font-weight: bold;
 }
 
+/* =======================
+   Keyframes
+======================= */
+
 @keyframes pulse {
-    0% { box-shadow: 0 0 0px #38bdf8; }
-    50% { box-shadow: 0 0 18px #38bdf8; }
-    100% { box-shadow: 0 0 0px #38bdf8; }
+    0% {
+        box-shadow: 0 0 0px #38bdf8;
+    }
+    50% {
+        box-shadow: 0 0 18px #38bdf8;
+    }
+    100% {
+        box-shadow: 0 0 0px #38bdf8;
+    }
 }
 
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(12px);
+        transform: translateY(10px);
     }
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
+
+
