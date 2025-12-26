@@ -1,112 +1,163 @@
+const PAGE_SIZE = 16;
+const MAX_ADDR = 255;
 const TLB_SIZE = 4;
-let tlb = [];
 
-// Page Table: Page → Frame
+/* PAGE TABLE */
 let pageTable = {};
-for (let i = 0; i < 16; i++) {
-    pageTable[i] = i + 10;
+for (let i = 0; i < 16; i++) pageTable[i] = i + 10;
+
+/* TLBs */
+let tlbWeb = [];
+let tlbC = [];
+let timeWeb = 0;
+let timeC = 0;
+
+/* PERFORMANCE */
+let hitCount = 0;
+let missCount = 0;
+
+/* REPLACE */
+function replaceTLB(tlb, policy) {
+    if (policy === "FIFO") tlb.shift();
+    else if (policy === "LRU") {
+        tlb.sort((a, b) => a.lastUsed - b.lastUsed);
+        tlb.shift();
+    } else {
+        tlb.splice(Math.floor(Math.random() * tlb.length), 1);
+    }
 }
 
-// INITIAL DISPLAY (PREVENT BLANK UI)
-window.onload = () => {
+/* SEARCH ANIMATION */
+async function glow(el) {
+    el.classList.add("search");
+    await new Promise(r => setTimeout(r, 600));
+    el.classList.remove("search");
+}
+
+/* SIMULATE */
+async function simulate() {
+    const addr = parseInt(document.getElementById("logical").value);
+    const policy = document.getElementById("policy").value;
+    if (isNaN(addr) || addr < 0 || addr > MAX_ADDR) return;
+
+    const page = Math.floor(addr / PAGE_SIZE);
+    const offset = addr % PAGE_SIZE;
+
     document.getElementById("cpu").innerHTML =
-        `<div class="block">Waiting for input</div>`;
+        `<div class="block">Page: ${page}<br>Offset: ${offset}</div>`;
 
-    document.getElementById("tlb").innerHTML =
-        `<div class="block">TLB Empty</div>`;
+    await glow(document.getElementById("tlb"));
 
-    const ptDiv = document.getElementById("pt");
-    ptDiv.innerHTML = "";
-    for (let p in pageTable) {
-        ptDiv.innerHTML += `<div class="block">P${p} → F${pageTable[p]}</div>`;
+    let entry = tlbWeb.find(e => e.page === page);
+    let frame;
+
+    if (entry) {
+        frame = entry.frame;
+        entry.lastUsed = ++timeWeb;
+        hitCount++;
+        showResult("TLB HIT", true);
+    } else {
+        await glow(document.getElementById("pt"));
+        frame = pageTable[page];
+        missCount++;
+
+        if (tlbWeb.length === TLB_SIZE) replaceTLB(tlbWeb, policy);
+        tlbWeb.push({ page, frame, lastUsed: ++timeWeb });
+
+        showResult("TLB MISS", false);
     }
 
-    document.getElementById("mem").innerHTML =
-        `<div class="block">No access yet</div>`;
-};
+    // Update Page Table with highlight
+    document.getElementById("pt").innerHTML =
+        Object.keys(pageTable).map(p =>
+            `<div class="block ${parseInt(p) === page ? 'pt-active' : ''}">
+             P${p} → F${pageTable[p]}</div>`
+        ).join("");
 
-async function simulate() {
-    const addr = document.getElementById("logical").value;
-    if (addr === "") return;
+    await glow(document.getElementById("mem"));
+
+    document.getElementById("tlb").innerHTML =
+        tlbWeb.map(e => `<div class="block">P${e.page} → F${e.frame}</div>`).join("");
+
+    document.getElementById("mem").innerHTML =
+        `<div class="block">Physical Address = ${frame * 16 + offset}</div>`;
+
+    updatePerformance();
+}
+
+/* PERFORMANCE */
+function updatePerformance() {
+    const total = hitCount + missCount;
+    const ratio = total === 0 ? 0 : ((hitCount / total) * 100).toFixed(2);
+    document.getElementById("performance").innerText =
+        `Hits: ${hitCount} | Misses: ${missCount} | Hit Ratio: ${ratio}%`;
+}
+
+/* RESULT POPUP */
+function showResult(text) {
+    const pop = document.getElementById("resultPopup");
+    pop.querySelector("h2").innerText = text;
+    pop.classList.remove("hidden");
+    setTimeout(() => pop.classList.add("hidden"), 1500);
+}
+
+/* C TERMINAL */
+function runCProgram() {
+    const addr = parseInt(document.getElementById("cInput").value);
+    const policy = document.getElementById("cPolicy").value;
+    if (isNaN(addr)) return;
 
     const page = Math.floor(addr / 16);
     const offset = addr % 16;
+    const term = document.getElementById("terminalOutput");
 
-    const cpu = document.getElementById("cpu");
-    const tlbDiv = document.getElementById("tlb");
-    const ptDiv = document.getElementById("pt");
-    const memDiv = document.getElementById("mem");
-    const status = document.getElementById("status");
+    term.innerHTML +=
+        `Enter Logical Address (-1 to exit): ${addr}<br>
+         Page Number: ${page}<br>
+         Offset: ${offset}<br>`;
 
-    // RESET VISUALS
-    cpu.innerHTML = "";
-    tlbDiv.classList.remove("search");
-    ptDiv.classList.remove("search");
-    memDiv.classList.remove("search");
+    let entry = tlbC.find(e => e.page === page);
+    let frame;
 
-    // CPU STEP
-    cpu.innerHTML =
-        `<div class="block search">Page: ${page}<br>Offset: ${offset}</div>`;
-    await delay(800);
-
-    // TLB SEARCH
-    tlbDiv.classList.add("search");
-    status.innerText = "Searching TLB...";
-    status.style.color = "#38bdf8";
-    await delay(1000);
-    tlbDiv.classList.remove("search");
-
-    let hit = tlb.find(e => e.page === page);
-
-    if (hit) {
-        status.innerText = "✅ TLB HIT";
-        status.style.color = "#22c55e";
-
+    if (entry) {
+        frame = entry.frame;
+        entry.lastUsed = ++timeC;
+        term.innerHTML += `TLB HIT ✅<br>`;
     } else {
-        status.innerText = "❌ TLB MISS";
-        status.style.color = "#ef4444";
-        await delay(800);
-
-        // PAGE TABLE SEARCH
-        ptDiv.classList.add("search");
-        status.innerText = "Searching Page Table...";
-        status.style.color = "#38bdf8";
-        await delay(1200);
-        ptDiv.classList.remove("search");
-
-        // UPDATE TLB (FIFO)
-        if (tlb.length === TLB_SIZE) {
-            tlb.shift();
-        }
-        tlb.push({ page: page, frame: pageTable[page] });
-
-        status.innerText = "Page Found → Updating TLB";
-        await delay(800);
+        frame = pageTable[page];
+        if (tlbC.length === TLB_SIZE) replaceTLB(tlbC, policy);
+        tlbC.push({ page, frame, lastUsed: ++timeC });
+        term.innerHTML += `TLB MISS ❌ (Policy: ${policy})<br>`;
     }
 
-    // UPDATE TLB DISPLAY (PERSISTENT)
-    tlbDiv.innerHTML = "";
-    if (tlb.length === 0) {
-        tlbDiv.innerHTML = `<div class="block">TLB Empty</div>`;
-    } else {
-        tlb.forEach(e => {
-            tlbDiv.innerHTML += `<div class="block">P${e.page} → F${e.frame}</div>`;
-        });
-    }
-
-    // MAIN MEMORY ACCESS
-    memDiv.classList.add("search");
-    await delay(1000);
-    memDiv.classList.remove("search");
-
-    memDiv.innerHTML =
-        `<div class="block">
-            Physical Address:<br>
-            ${(pageTable[page] * 16) + offset}
-        </div>`;
+    term.innerHTML += `Physical Address = ${frame * 16 + offset}<br><br>`;
 }
 
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+/* THEORY */
+function showTheory(title, text) {
+    document.getElementById("theoryTitle").innerText = title;
+    document.getElementById("theoryText").innerText = text;
+    document.getElementById("overlay").classList.remove("hidden");
+    document.getElementById("theoryModal").classList.remove("hidden");
+}
+function closeTheory() {
+    document.getElementById("overlay").classList.add("hidden");
+    document.getElementById("theoryModal").classList.add("hidden");
 }
 
+function showTLBTheory() {
+    showTheory("Translation Lookaside Buffer (TLB)",
+        "TLB is a small, fast associative memory that stores page-to-frame mappings.");
+}
+function showHitTheory() {
+    showTheory("TLB Hit & Miss",
+        "TLB Hit avoids page table access. TLB Miss requires page table lookup.");
+}
+function showAddressTheory() {
+    showTheory("Physical Address Calculation",
+        "Physical Address = (Frame × Page Size) + Offset");
+}
+function showPerformanceTheory() {
+    showTheory("TLB Performance",
+        "Hit Ratio = Hits / Total Memory References");
+}

@@ -10,15 +10,31 @@
 <body>
 
 <h1 class="title">TLB Hit / Miss Visualizer</h1>
-<p class="subtitle">Animated OS Memory Management Simulation</p>
+<p class="subtitle">OS Memory Management Simulation</p>
 
+<!-- INPUT -->
 <div class="input-panel">
-    <input type="number" id="logical" placeholder="Enter Logical Address">
+    <input type="number" id="logical" placeholder="Logical Address (0–255)" min="0" max="255">
+
+    <select id="policy">
+        <option value="FIFO">FIFO</option>
+        <option value="LRU">LRU</option>
+        <option value="RANDOM">Random</option>
+    </select>
+
     <button onclick="simulate()">Simulate</button>
 </div>
 
-<div class="pipeline">
+<!-- THEORY BUTTONS -->
+<div class="theory-controls">
+    <button onclick="showTLBTheory()">What is TLB?</button>
+    <button onclick="showHitTheory()">TLB Hit & Miss</button>
+    <button onclick="showAddressTheory()">Physical Address</button>
+    <button onclick="showPerformanceTheory()">TLB Performance</button>
+</div>
 
+<!-- PIPELINE -->
+<div class="pipeline">
     <div class="glass">
         <h3>CPU</h3>
         <div id="cpu"></div>
@@ -29,21 +45,143 @@
         <div id="tlb"></div>
     </div>
 
-    <div class="glass">
+    <div class="glass page-table">
         <h3>Page Table</h3>
         <div id="pt"></div>
     </div>
 
-    <div class="glass">
+    <div class="glass memory">
         <h3>Main Memory</h3>
         <div id="mem"></div>
     </div>
+</div>
+
+<div id="performance" class="performance-box">
+    Hits: 0 | Misses: 0 | Hit Ratio: 0%
+</div>
+
+<hr>
+
+<h2 class="section-title">TLB Hit / Miss Simulation in C</h2>
+
+<div class="c-section">
+
+<!-- FULL C PROGRAM -->
+<pre class="code-box">
+#include &lt;stdio.h&gt;
+
+#define TLB_SIZE 4
+#define PAGE_TABLE_SIZE 16
+
+struct TLB {
+    int page;
+    int frame;
+};
+
+struct TLB tlb[TLB_SIZE];
+int tlb_count = 0;
+int pageTable[PAGE_TABLE_SIZE];
+
+void initPageTable() {
+    for(int i = 0; i &lt; PAGE_TABLE_SIZE; i++)
+        pageTable[i] = i + 10;
+}
+
+void initTLB() {
+    for(int i = 0; i &lt; TLB_SIZE; i++) {
+        tlb[i].page = -1;
+        tlb[i].frame = -1;
+    }
+}
+
+int searchTLB(int page) {
+    for(int i = 0; i &lt; TLB_SIZE; i++) {
+        if(tlb[i].page == page)
+            return tlb[i].frame;
+    }
+    return -1;
+}
+
+void updateTLB(int page, int frame) {
+    tlb[tlb_count % TLB_SIZE].page = page;
+    tlb[tlb_count % TLB_SIZE].frame = frame;
+    tlb_count++;
+}
+
+int main() {
+    int logicalAddress, page, offset, frame;
+
+    initPageTable();
+    initTLB();
+
+    printf("=== TLB HIT / MISS SIMULATOR ===\n");
+
+    while(1) {
+        printf("\nEnter Logical Address (-1 to exit): ");
+        scanf("%d", &logicalAddress);
+
+        if(logicalAddress == -1)
+            break;
+
+        page = logicalAddress / 16;
+        offset = logicalAddress % 16;
+
+        printf("\nPage Number: %d\n", page);
+        printf("Offset: %d\n", offset);
+
+        frame = searchTLB(page);
+
+        if(frame != -1) {
+            printf("TLB HIT\n");
+            printf("Frame obtained from TLB: %d\n", frame);
+        } else {
+            printf("TLB MISS\n");
+            frame = pageTable[page];
+            printf("Frame obtained from Page Table: %d\n", frame);
+            updateTLB(page, frame);
+            printf("TLB Updated\n");
+        }
+
+        printf("Physical Address = %d\n", frame * 16 + offset);
+    }
+
+    return 0;
+}
+</pre>
+
+<!-- TERMINAL -->
+<div class="terminal">
+    <div class="terminal-header">C Program Output (Simulated)</div>
+
+    <select id="cPolicy">
+        <option value="FIFO">FIFO</option>
+        <option value="LRU">LRU</option>
+        <option value="RANDOM">Random</option>
+    </select>
+
+    <div id="terminalOutput" class="terminal-body">
+        === TLB HIT / MISS SIMULATOR ===<br><br>
+    </div>
+
+    <input type="number" id="cInput" placeholder="Logical Address">
+    <button onclick="runCProgram()">Run</button>
+</div>
 
 </div>
 
-<div id="status"></div>
+<!-- RESULT POPUP -->
+<div id="resultPopup" class="result-popup hidden">
+    <h2 id="resultText"></h2>
+</div>
+
+<!-- THEORY POPUP -->
+<div id="overlay" class="overlay hidden" onclick="closeTheory()"></div>
+<div id="theoryModal" class="theory-modal hidden">
+    <span class="close-btn" onclick="closeTheory()">✖</span>
+    <h3 id="theoryTitle"></h3>
+    <p id="theoryText"></p>
+</div>
 
 <script src="script.js"></script>
 </body>
 </html>
-
