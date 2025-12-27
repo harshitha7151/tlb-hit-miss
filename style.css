@@ -42,39 +42,64 @@ button {
     width: 220px;
 }
 
-.page-table {
-    width: 300px;
-}
+.page-table { width: 420px; }
 
-.memory {
-    width: 220px;
-    min-height: auto;
+/* HIDE PIPELINE MAIN MEMORY */
+.pipeline .memory {
+    display: none;
 }
 
 .block {
     background: rgba(255,255,255,0.15);
     padding: 8px;
     border-radius: 8px;
-    margin: 6px 0;
+    margin: 4px 0;
 }
 
-/* PAGE TABLE */
+/* PAGE TABLE SIDE BY SIDE */
 #pt {
+    display: flex;
+    gap: 12px;
+}
+
+.pt-block {
+    flex: 1;
+    background: rgba(255,255,255,0.12);
+    padding: 6px;
+    border-radius: 10px;
+}
+
+.pt-header {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    font-weight: bold;
+    color: #38bdf8;
+}
+
+.pt-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 4px;
 }
 
 .pt-active {
-    border: 2px solid #38bdf8;
-    box-shadow: 0 0 15px #38bdf8;
+    background: rgba(56,189,248,0.25);
+    box-shadow: 0 0 12px #38bdf8;
+}
+
+/* MAIN MEMORY MIDDLE */
+.memory-middle {
+    margin: 20px auto;
+    width: 320px;
+    background: rgba(255,255,255,0.08);
+    padding: 15px;
+    border-radius: 16px;
 }
 
 /* SEARCH */
 .search {
     animation: glow 0.8s infinite;
 }
-
 @keyframes glow {
     50% { box-shadow: 0 0 20px #38bdf8; }
 }
@@ -134,10 +159,12 @@ button {
     padding: 30px;
     background: rgba(15,23,42,0.95);
     border-radius: 20px;
-    box-shadow: 0 0 40px rgba(56,189,248,0.6);
     animation: pop 0.4s forwards;
     z-index: 300;
 }
+
+.result-popup.hit { box-shadow: 0 0 40px #22c55e; }
+.result-popup.miss { box-shadow: 0 0 40px #ef4444; }
 
 @keyframes pop {
     to { transform: translate(-50%, -50%) scale(1); }

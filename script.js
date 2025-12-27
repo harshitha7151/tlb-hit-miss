@@ -67,20 +67,35 @@ async function simulate() {
         showResult("TLB MISS", false);
     }
 
-    // Update Page Table with highlight
-    document.getElementById("pt").innerHTML =
-        Object.keys(pageTable).map(p =>
-            `<div class="block ${parseInt(p) === page ? 'pt-active' : ''}">
-             P${p} → F${pageTable[p]}</div>`
-        ).join("");
+    /* PAGE TABLE (SIDE BY SIDE BLOCKS) */
+    document.getElementById("pt").innerHTML = `
+        <div class="pt-block">
+            <div class="pt-header"><span>Page</span><span>Frame</span></div>
+            ${Object.keys(pageTable).slice(0,8).map(p =>
+                `<div class="pt-row ${parseInt(p)===page?'pt-active':''}">
+                    <span>${p}</span><span>${pageTable[p]}</span>
+                </div>`).join("")}
+        </div>
 
-    await glow(document.getElementById("mem"));
+        <div class="pt-block">
+            <div class="pt-header"><span>Page</span><span>Frame</span></div>
+            ${Object.keys(pageTable).slice(8,16).map(p =>
+                `<div class="pt-row ${parseInt(p)===page?'pt-active':''}">
+                    <span>${p}</span><span>${pageTable[p]}</span>
+                </div>`).join("")}
+        </div>
+    `;
 
     document.getElementById("tlb").innerHTML =
         tlbWeb.map(e => `<div class="block">P${e.page} → F${e.frame}</div>`).join("");
 
+    const physical = frame * 16 + offset;
+
     document.getElementById("mem").innerHTML =
-        `<div class="block">Physical Address = ${frame * 16 + offset}</div>`;
+        `<div class="block">Physical Address = ${physical}</div>`;
+
+    document.getElementById("mem-middle").innerHTML =
+        `<div class="block">Physical Address = ${physical}</div>`;
 
     updatePerformance();
 }
@@ -94,10 +109,11 @@ function updatePerformance() {
 }
 
 /* RESULT POPUP */
-function showResult(text) {
+function showResult(text, isHit) {
     const pop = document.getElementById("resultPopup");
+    pop.classList.remove("hidden","hit","miss");
+    pop.classList.add(isHit ? "hit" : "miss");
     pop.querySelector("h2").innerText = text;
-    pop.classList.remove("hidden");
     setTimeout(() => pop.classList.add("hidden"), 1500);
 }
 
